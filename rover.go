@@ -6,24 +6,12 @@ import (
 	"strings"
 )
 
-type Mars struct {
-	Obstacles [][]int
-}
-
 type Rover struct {
 	X, Y      int
 	Direction string
 }
 
-//Init makes any initialization required
-func Init(obstacles [][]int) *Mars {
-	mars := Mars{
-		Obstacles: obstacles,
-	}
-	return &mars
-}
-
-func CreateRover(position []int, direction string) *Rover {
+func CreateRover(position [2]int, direction string) *Rover {
 	rover := Rover{
 		X:         position[0],
 		Y:         position[1],
@@ -32,8 +20,7 @@ func CreateRover(position []int, direction string) *Rover {
 	return &rover
 }
 
-func (r *Rover) CommandReceiver(command string, mars *Mars) string {
-	obstacles := createObstaclesHashMap(mars)
+func (r *Rover) CommandReceiver(command string, obstacles map[string]bool) string {
 	for i := 0; i < len(command); i++ {
 		cmd := strings.ToLower(string(command[i]))
 		err := r.Move(cmd, obstacles)
@@ -47,13 +34,13 @@ func (r *Rover) CommandReceiver(command string, mars *Mars) string {
 }
 
 func (r *Rover) Move(move string, obstacles map[string]bool) error {
-	var x, y int
+	x, y := r.X, r.Y
 	if move == "l" {
 		r.Turn("LEFT")
 	} else if move == "r" {
 		r.Turn("RIGHT")
 	} else if (r.Direction == "NORTH" && move == "f") || (r.Direction == "SOUTH" && move == "b") {
-		x, y = r.X+1, r.Y
+		x, y = r.X, r.Y+1
 	} else if (r.Direction == "SOUTH" && move == "f") || (r.Direction == "NORTH" && move == "b") {
 		x, y = r.X, r.Y-1
 	} else if (r.Direction == "WEST" && move == "f") || (r.Direction == "EAST" && move == "b") {
@@ -72,7 +59,7 @@ func (r *Rover) Move(move string, obstacles map[string]bool) error {
 //Turn turns the rover on the rotation commands
 func (r *Rover) Turn(direction string) {
 	directions := map[string][]string{"WEST": {"SOUTH", "NORTH"}, "NORTH": {"WEST", "EAST"}, "EAST": {"NORTH", "SOUTH"}, "SOUTH": {"EAST", "WEST"}}
-	if direction == "RIGHT" ||  direction == "r" || direction == "R"{
+	if direction == "RIGHT" || direction == "r" || direction == "R" {
 		r.Direction = directions[r.Direction][1]
 	} else {
 		r.Direction = directions[r.Direction][0]
@@ -86,9 +73,9 @@ func checkObstacle(x, y int, obstacles map[string]bool) bool {
 }
 
 //obstacle makes a hashmap to access obstacle faster
-func createObstaclesHashMap(mars *Mars) map[string]bool {
-	obstacleMap := make(map[string]bool, len(mars.Obstacles))
-	for _, obst := range mars.Obstacles {
+func createObstaclesHashMap(obstacles [][2]int) map[string]bool {
+	obstacleMap := make(map[string]bool, len(obstacles))
+	for _, obst := range obstacles {
 		position := fmt.Sprintf("%d,%d", obst[0], obst[1])
 		obstacleMap[position] = true
 	}
