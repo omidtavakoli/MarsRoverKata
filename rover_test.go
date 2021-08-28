@@ -65,15 +65,15 @@ func TestMover(t *testing.T) {
 			obstacles:   [][2]int{},
 			direction:   "WEST",
 			command:     "f",
-			want:        [2]int{3,0},
+			want:        [2]int{3, 0},
 		},
 		{
-			description: "obstacle check",
+			description: "mover check",
 			now:         [2]int{3, 2},
 			obstacles:   [][2]int{},
 			direction:   "NORTH",
 			command:     "f",
-			want:        [2]int{3,3},
+			want:        [2]int{3, 3},
 		},
 	}
 	for _, tt := range tests {
@@ -99,7 +99,7 @@ func TestCommandReceiver(t *testing.T) {
 		message     string
 	}{
 		{
-			description: "destinations check",
+			description: "cmd receiver check",
 			now:         [2]int{4, 0},
 			obstacles:   [][2]int{{3, 1}},
 			direction:   "EAST",
@@ -108,7 +108,7 @@ func TestCommandReceiver(t *testing.T) {
 			message:     "(3, 4) WEST",
 		},
 		{
-			description: "destinations check",
+			description: "cmd receiver check",
 			now:         [2]int{4, 2},
 			obstacles:   [][2]int{},
 			direction:   "EAST",
@@ -174,4 +174,91 @@ func TestObstacles(t *testing.T) {
 	msg := rover.CommandReceiver("FF", obstaclesHashMap)
 
 	assert.Equal(t, "(2, 4) WEST STOPPED", msg)
+}
+
+func TestCalculateDirectionCost(t *testing.T) {
+	tests := []struct {
+		description string
+		now         string
+		want        string
+		cost        [2]int
+	}{
+		{
+			description: "both 4",
+			now:         "SOUTH",
+			want:        "SOUTH",
+			cost:        [2]int{4, 4},
+		},
+		{
+			description: "left 1 and right 3",
+			now:         "NORTH",
+			want:        "WEST",
+			cost:        [2]int{1, 3},
+		},
+		{
+			description: "both 2",
+			now:         "EAST",
+			want:        "WEST",
+			cost:        [2]int{2, 2},
+		},
+		{
+			description: "both",
+			now:         "EAST",
+			want:        "WEST",
+			cost:        [2]int{2, 2},
+		},
+		{
+			description: "",
+			now:         "EAST",
+			want:        "NORTH",
+			cost:        [2]int{1, 3},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.description, func(t *testing.T) {
+			cost := CalculateDirectionCost(tt.now, tt.want)
+			assert.Equal(t, tt.cost, cost)
+		})
+	}
+}
+
+func TestCorrectDirection(t *testing.T) {
+	tests := []struct {
+		description string
+		now         string
+		want        string
+		command     string
+	}{
+		{
+			description: "both 4",
+			now:         "SOUTH",
+			want:        "SOUTH",
+			command:     "",
+		},
+		{
+			description: "just left",
+			now:         "NORTH",
+			want:        "WEST",
+			command:     "L",
+		},
+		{
+			description: "just right",
+			now:         "EAST",
+			want:        "SOUTH",
+			command:     "R",
+		},
+		{
+			description: "just right",
+			now:         "EAST",
+			want:        "NORTH",
+			command:     "L",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.description, func(t *testing.T) {
+			rover := CreateRover([2]int{10, 50}, tt.now)
+			cmd := rover.CorrectDirection(tt.want)
+			assert.Equal(t, tt.command, cmd)
+		})
+	}
 }
