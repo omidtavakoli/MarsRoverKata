@@ -81,3 +81,47 @@ func createObstaclesHashMap(obstacles [][2]int) map[string]bool {
 	}
 	return obstacleMap
 }
+
+func CalculateDirectionCost(now, want string) [2]int {
+	//0: left rotation & 1:right rotation
+	if now == want {
+		return [2]int{4, 4}
+	} else {
+		cost := [2]int{}
+		directions := map[string][]string{"WEST": {"SOUTH", "NORTH"}, "NORTH": {"WEST", "EAST"}, "EAST": {"NORTH", "SOUTH"}, "SOUTH": {"EAST", "WEST"}}
+
+		for key := range cost {
+			cursor := now
+			for {
+				cursor = directions[cursor][key]
+				cost[key]++
+				if cursor == want {
+					break
+				}
+			}
+		}
+
+		return cost
+	}
+}
+
+func (r *Rover) CorrectDirection(direction string) string {
+	var command string
+	rotation := "L"
+	rotationCost := CalculateDirectionCost(r.Direction, direction)
+	if rotationCost[1] < rotationCost[0] {
+		rotation = "R"
+	}
+
+	if r.Direction != direction {
+		for {
+			if r.Direction == direction {
+				break
+			}
+			r.Turn(rotation)
+			command += rotation
+		}
+	}
+
+	return command
+}
